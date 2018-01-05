@@ -19,6 +19,17 @@ class GetData extends Command
 	}
 
 
+	protected function log(string $message) {
+		$timestamp = Carbon::now();
+
+		file_put_contents(
+			storage_path('logs/get-data-' . $timestamp->format('Y-m-d') . '.log'),
+			'[ ' . $timestamp->format('d.m.Y H:i:s') . ' ]' . $message . PHP_EOL,
+			FILE_APPEND
+		);
+	}
+
+
 	protected function logging($content, $value = NULL) {
 		if (is_array($value)) {
 			$context = 'Уровень света: ' . $value[ 'light' ] . '; Температура: ' . $value[ 'temp' ] . '°C';
@@ -29,21 +40,13 @@ class GetData extends Command
 		}
 
 		if ($context) {
-//			\Log::info($content, [ 'data' => $context ]);
-			file_put_contents(
-				storage_path('logs/get-data-' . Carbon::now()->format('Y-m-d') . '.log'),
-				$content . json_encode([ 'data' => $context ], JSON_UNESCAPED_UNICODE)
-			);
+			$this->log($content . json_encode([ 'data' => $context ], JSON_UNESCAPED_UNICODE));
 		} else {
-//			\Log::info($content);
-			file_put_contents(
-				storage_path('logs/get-data-' . Carbon::now()->format('Y-m-d') . '.log'),
-				$content
-			);
+			$this->log($content);
 		}
 
 		if (file_exists(base_path('pc_boot.lock'))) {
-			\Log::info('Перезагрузка компьютера');
+			$this->log('Перезагрузка компьютера');
 			unlink (base_path('pc_boot.lock'));
 		} else {
 			foreach (config('contacts.mails', []) as $mail) {
